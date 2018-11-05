@@ -6,11 +6,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"runtime"
 	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 type person struct {
@@ -27,18 +27,12 @@ func md5hex(text string) string {
 	return fmt.Sprintf("%x", digest.Sum(nil))
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
-		return
-	}
+func indexHandler(ctx *fasthttp.RequestCtx) {
+	body := ctx.PostBody()
 	var person person
-	err = json.Unmarshal(body, &person)
+	err := json.Unmarshal(body, &person)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, err.Error())
+		ctx.Error(err.Error(), fasthttp.StatusBadRequest)
 		return
 	}
 
@@ -50,16 +44,25 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		"say":          "go is the best",
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	ctx.Write(response)
 	if cnt%100 == 0 {
 		fmt.Println(cnt)
 	}
 	cnt++
+}
+
+func httpHandler(ctx *fasthttp.RequestCtx) {
+	switch string(ctx.Path()) {
+	case "/":
+		indexHandler(ctx)
+	default:
+		ctx.Error("Not found", fasthttp.StatusNotFound)
+	}
 }
 
 func main() {
@@ -69,9 +72,8 @@ func main() {
 	flag.Parse()
 
 	runtime.GOMAXPROCS(*numProcs)
-	http.HandleFunc("/", indexHandler)
 	fmt.Println("Started.")
-	err := http.ListenAndServe(fmt.Sprintf("%s:%d", *host, *port), nil)
+	err := fasthttp.ListenAndServe(fmt.Sprintf("%s:%d", *host, *port), httpHandler)
 	if err != nil {
 		log.Fatal(err)
 	}
