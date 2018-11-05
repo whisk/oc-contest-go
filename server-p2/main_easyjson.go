@@ -36,7 +36,7 @@ func easyjson89aae3efDecodeOcContestGoServerP2(in *jlexer.Lexer, out *response) 
 			continue
 		}
 		switch key {
-		case "ID":
+		case "id":
 			out.ID = string(in.String())
 		case "first_name":
 			out.FirstName = string(in.String())
@@ -61,7 +61,7 @@ func easyjson89aae3efEncodeOcContestGoServerP2(out *jwriter.Writer, in response)
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"ID\":"
+		const prefix string = ",\"id\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])
@@ -155,7 +155,7 @@ func easyjson89aae3efDecodeOcContestGoServerP21(in *jlexer.Lexer, out *person) {
 			continue
 		}
 		switch key {
-		case "ID":
+		case "id":
 			out.ID = string(in.String())
 		case "first_name":
 			out.FirstName = string(in.String())
@@ -176,7 +176,7 @@ func easyjson89aae3efEncodeOcContestGoServerP21(out *jwriter.Writer, in person) 
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"ID\":"
+		const prefix string = ",\"id\":"
 		if first {
 			first = false
 			out.RawString(prefix[1:])

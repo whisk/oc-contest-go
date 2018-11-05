@@ -16,13 +16,13 @@ import (
 )
 
 type person struct {
-	ID        string
+	ID        string `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 }
 
 type response struct {
-	ID          string
+	ID          string `json:"id"`
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
 	CurrentTime string `json:"current_time"`
