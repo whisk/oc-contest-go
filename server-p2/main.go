@@ -82,6 +82,8 @@ func main() {
 	numProcs := flag.Int("n", 1, "Max number of procs")
 	port := flag.Int("p", 8080, "Port number")
 	host := flag.String("h", "127.0.0.1", "Host")
+	concurrency := flag.Int("c", 256*1024, "fasthttp concurrency")
+	keepalive := flag.Bool("k", true, "Keepalive")
 	flag.Parse()
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -97,9 +99,14 @@ func main() {
 	}
 
 	runtime.GOMAXPROCS(*numProcs)
-	fmt.Println("Started.")
 	go func() {
-		err := fasthttp.ListenAndServe(fmt.Sprintf("%s:%d", *host, *port), httpHandler)
+		s := fasthttp.Server{
+			Handler:          httpHandler,
+			DisableKeepalive: !*keepalive,
+			Concurrency:      *concurrency,
+		}
+		fmt.Printf("Started %+v.\n", s)
+		err := s.ListenAndServe(fmt.Sprintf("%s:%d", *host, *port))
 		if err != nil {
 			log.Fatal(err)
 		}
