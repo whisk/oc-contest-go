@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io"
@@ -39,10 +40,18 @@ var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var memprofile = flag.String("memprofile", "", "write memory profile to this file")
 var serverDateStr = ""
 
-func md5hex(text string) []byte {
+func md5hex(text string) string {
 	digest := md5.New()
 	io.WriteString(digest, text)
-	return digest.Sum(nil)
+	return hex.EncodeToString(digest.Sum(nil))
+}
+
+func strJoin(args ...string) string {
+	var str strings.Builder
+	for _, s := range args {
+		str.WriteString(s)
+	}
+	return str.String()
 }
 
 func indexHandler(ctx *fasthttp.RequestCtx) {
@@ -53,20 +62,10 @@ func indexHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	var first strings.Builder
-	first.WriteString(person.FirstName)
-	first.WriteString(" ")
-	first.Write(md5hex(person.FirstName))
-
-	var last strings.Builder
-	first.WriteString(person.LastName)
-	first.WriteString(" ")
-	first.Write(md5hex(person.LastName))
-
 	res, err := response{
 		ID:          person.ID,
-		FirstName:   first.String(),
-		LastName:    last.String(),
+		FirstName:   strJoin(person.FirstName, " ", md5hex(person.FirstName)),
+		LastName:    strJoin(person.LastName, " ", md5hex(person.LastName)),
 		CurrentTime: serverDateStr,
 		Say:         say,
 	}.MarshalJSON()
